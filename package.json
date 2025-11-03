@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.51.0",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  },
+  "type": "module"
+}
