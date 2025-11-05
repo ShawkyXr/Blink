@@ -2,7 +2,26 @@
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
     "express": "^5.1.0",
+    "mongoose": "^8.19.2",
     "nodemon": "^3.1.10"
   },
-  "type": "module"
+  "type": "module",
+  "name": "blink",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShawkyXr/Blink.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShawkyXr/Blink/issues"
+  },
+  "homepage": "https://github.com/ShawkyXr/Blink#readme"
 }
