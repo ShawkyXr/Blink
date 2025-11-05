@@ -85,8 +85,43 @@ const redirectUrl = async (req, res) => {
     }
 };
 
+const deleteUrl = async (req, res) => {
+    try {
+        const urlId = req.params.urlId;
+        const userId = req.userId;
+        
+        const url = await Url.findById(urlId);
+        if (!url) {
+            return res.status(404).json({ status: FAIL, message: 'URL not found' });
+        }
+
+        if (url.userId?.toString() !== userId) {
+            const index = url.sharedWith.indexOf(userId);
+            if (index > -1) {
+                url.sharedWith.splice(index, 1);
+                await url.save();
+                return res.status(200).json({ status: SUCCESS, message: 'Access to URL removed' });
+            } else {
+                return res.status(403).json({ status: FAIL, message: 'You do not have permission to delete this URL' });
+            }
+        }
+
+        if (url.sharedWith.length > 0) {
+            url.userId = url.sharedWith[0];
+            url.sharedWith.shift();
+            await url.save();
+            return res.status(200).json({ status: SUCCESS, message: 'URL ownership transferred' });
+        }else{
+            await Url.findByIdAndDelete(urlId);
+            return res.status(200).json({ status: SUCCESS, message: 'URL deleted successfully' });
+        }
+    } catch (err) {
+        return res.status(500).json({ status: ERROR, message: err.message });
+    }
+};
 
 export default {
     createUrl,
-    redirectUrl
+    redirectUrl,
+    deleteUrl
 };
