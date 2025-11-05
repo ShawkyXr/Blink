@@ -2,25 +2,10 @@ import Url from '../models/url.model.js';
 import { SUCCESS, FAIL, ERROR } from '../utils/httpStautsText.js';
 
 
-const getAllUrls = async (req, res) => {
-    try {
-        const urls = await Url.find();
-
-        if (urls.length === 0) {
-            return res.status(401).json({ status: FAIL, message: 'No URLs found' });
-        }
-
-        return res.status(200).json({ status: SUCCESS, data: urls });
-    } catch (err) {
-        return res.status(500).json({ status: ERROR, message: err.message });
-    }
-};
-
-
 const createUrl = async (req, res) => {
     try {
         let originalUrl = req.body.originalUrl;
-        
+
         if (!originalUrl) {
             return res.status(400).json({ status: FAIL, message: 'originalUrl is required' });
         }
@@ -34,9 +19,20 @@ const createUrl = async (req, res) => {
         } catch {
             return res.status(400).json({ status: FAIL, message: 'Invalid URL format' });
         }
-
+        
         const existingUrl = await Url.findOne({ originalUrl });
         if (existingUrl) {
+            const userId = req.userId;
+            
+            if (userId) {
+                if (!Array.isArray(existingUrl.sharedWith)) {
+                    existingUrl.sharedWith = [];
+                }
+                if (!existingUrl.sharedWith.includes(userId) && existingUrl.userId?.toString() !== userId) {
+                    existingUrl.sharedWith.push(userId);
+                    await existingUrl.save();
+                }
+            }
             return res.status(200).json({ status: SUCCESS, data: existingUrl });
         }
 
@@ -49,7 +45,14 @@ const createUrl = async (req, res) => {
             if (!existingShort) break;
         }
 
-        const newUrl = new Url({ originalUrl, shortUrl, urlCode });
+        const newUrl = new Url({ 
+            originalUrl,
+            shortUrl,
+            urlCode,
+            userId: req.userId || null,
+            createdAt: new Date(),
+            expiresAt: req.userId ? null : new Date(Date.now() + 60 * 60 * 1000)
+        });
         await newUrl.save();
 
         return res.status(201).json({ status: SUCCESS, data: newUrl });
@@ -85,6 +88,5 @@ const redirectUrl = async (req, res) => {
 
 export default {
     createUrl,
-    getAllUrls,
     redirectUrl
 };
