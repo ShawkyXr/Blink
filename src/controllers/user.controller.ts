@@ -1,10 +1,15 @@
+import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import Url from "../models/url.model.js";
-import { SUCCESS, FAIL, ERROR } from '../utils/httpStautsText.js';
+import { SUCCESS, FAIL, ERROR } from '../utils/httpStatusText.js';
 
-const register = async (req, res) => {
+interface AuthenticatedRequest extends Request {
+    userId?: string;
+}
+
+const register = async (req: Request, res: Response) => {
     if (!req.body) {
         return res.status(400).json({status : FAIL , msg : "Request body is missing"});
     }
@@ -29,7 +34,7 @@ const register = async (req, res) => {
             password : hashedPassword
         });
 
-        const token = jwt.sign({id : newUser._id , email}, process.env.JWT_SECRET , {expiresIn : '30d'});
+        const token = jwt.sign({id : newUser._id , email}, process.env.JWT_SECRET! , {expiresIn : '30d'});
         newUser.token = token;
 
         await newUser.save();
@@ -41,7 +46,7 @@ const register = async (req, res) => {
 }
 
 
-const login = async (req, res) => {
+const login = async (req: Request, res: Response) => {
     if (!req.body) {
         return res.status(400).json({status : FAIL , msg : "Request body is missing"});
     }
@@ -64,7 +69,7 @@ const login = async (req, res) => {
             return res.status(401).json({status : FAIL , msg : "Invalid email or password"});
         }
 
-        const token = jwt.sign({id : user._id , email}, process.env.JWT_SECRET , {expiresIn : '30d'});
+        const token = jwt.sign({id : user._id , email}, process.env.JWT_SECRET! , {expiresIn : '30d'});
         user.token = token;
 
         await user.save();
@@ -76,7 +81,7 @@ const login = async (req, res) => {
 }
 
 
-const getProfile = async (req, res) => {
+const getProfile = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const userId = req.userId;
         if (!userId) {

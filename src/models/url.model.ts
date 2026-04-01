@@ -1,4 +1,3 @@
-import e from 'express';
 import { Schema, model } from 'mongoose';
 
 const urlSchema = new Schema({

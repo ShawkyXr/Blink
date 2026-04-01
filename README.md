@@ -1,0 +1,1 @@
+A modern, feature-rich RESTful API for URL shortening built with Node.js, Express, and MongoDB. Supports both anonymous and authenticated users with advanced features like automatic expiration, and URL deduplication.

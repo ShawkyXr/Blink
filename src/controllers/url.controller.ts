@@ -1,8 +1,19 @@
 import Url from '../models/url.model.js';
-import { SUCCESS, FAIL, ERROR } from '../utils/httpStautsText.js';
+import { SUCCESS, FAIL, ERROR } from '../utils/httpStatusText.js';
+import type { Request, Response } from 'express';
+import mongoose from 'mongoose';
 
+interface DecodedToken {
+    id: string;
+    iat: number;
+    exp: number;
+}
 
-const createUrl = async (req, res) => {
+interface AuthenticatedRequest extends Request {
+    userId?: string;
+}
+
+const createUrl = async (req: AuthenticatedRequest, res: Response) => {
     try {
         let originalUrl = req.body.originalUrl;
 
@@ -28,8 +39,9 @@ const createUrl = async (req, res) => {
                 if (!Array.isArray(existingUrl.sharedWith)) {
                     existingUrl.sharedWith = [];
                 }
-                if (!existingUrl.sharedWith.includes(userId) && existingUrl.userId?.toString() !== userId) {
-                    existingUrl.sharedWith.push(userId);
+                const sharedWithStrings = existingUrl.sharedWith.map((id: mongoose.Types.ObjectId) => id.toString());
+                if (!sharedWithStrings.includes(userId) && existingUrl.userId?.toString() !== userId) {
+                    existingUrl.sharedWith.push(new mongoose.Types.ObjectId(userId));
                     await existingUrl.save();
                 }
             }
@@ -57,13 +69,13 @@ const createUrl = async (req, res) => {
 
         return res.status(201).json({ status: SUCCESS, data: newUrl });
         
-    } catch (err) {
+    } catch (err: any) {
         return res.status(500).json({ status: ERROR, message: err.message });
     }
 };
 
 
-const redirectUrl = async (req, res) => {
+const redirectUrl = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const urlCode = req.params.urlCode;
 
@@ -80,12 +92,12 @@ const redirectUrl = async (req, res) => {
 
         return res.redirect(301, redirectTo);
         
-    } catch (err) {
+    } catch (err: any) {
         return res.status(500).json({ status: ERROR, message: err.message });
     }
 };
 
-const deleteUrl = async (req, res) => {
+const deleteUrl = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const urlId = req.params.urlId;
         const userId = req.userId;
@@ -96,7 +108,7 @@ const deleteUrl = async (req, res) => {
         }
 
         if (url.userId?.toString() !== userId) {
-            const index = url.sharedWith.indexOf(userId);
+            const index = url.sharedWith.findIndex((id: mongoose.Types.ObjectId) => id.toString() === userId);
             if (index > -1) {
                 url.sharedWith.splice(index, 1);
                 await url.save();
@@ -107,7 +119,7 @@ const deleteUrl = async (req, res) => {
         }
 
         if (url.sharedWith.length > 0) {
-            url.userId = url.sharedWith[0];
+            url.userId = url.sharedWith[0]!;
             url.sharedWith.shift();
             await url.save();
             return res.status(200).json({ status: SUCCESS, message: 'URL ownership transferred' });
@@ -115,7 +127,7 @@ const deleteUrl = async (req, res) => {
             await Url.findByIdAndDelete(urlId);
             return res.status(200).json({ status: SUCCESS, message: 'URL deleted successfully' });
         }
-    } catch (err) {
+    } catch (err: any) {
         return res.status(500).json({ status: ERROR, message: err.message });
     }
 };

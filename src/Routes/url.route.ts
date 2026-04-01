@@ -8,7 +8,7 @@ const router = Router();
 router.route('/cut')
     .post(optionalAuth, urlController.createUrl)
 
-router.route('/goto/:urlCode')
+router.route('/urlCode')
     .get(optionalAuth, urlController.redirectUrl)
 
 router.route('/delete/:urlId')

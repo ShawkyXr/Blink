@@ -11,9 +11,9 @@ const app = express();
 
 app.use(json());
 
-const PORT = process.env.PORT || 3000;
+const PORT  = process.env.PORT;
 
-connect(process.env.MONGO_URL)
+connect(process.env.MONGO_URL!)
   .then(() => console.log("MongoDB connected"))
   .catch((error) => {
     console.error("MongoDB connection error:", error);
@@ -22,8 +22,8 @@ connect(process.env.MONGO_URL)
 
 
 app.use(json());
-app.use('/blink', urlRoutes);
-app.use('/blink/user', userRoutes);
+app.use('api/blink', urlRoutes);
+app.use('api/blink/user', userRoutes);
 
 
 app.listen(PORT, () => {
